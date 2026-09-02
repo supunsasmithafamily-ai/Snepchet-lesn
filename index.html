@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapchat Camera Kit - Photo Capture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            width: 100%;
+            border-radius: 12px;
+            background-color: #000;
+        }
+        button {
+            margin-top: 15px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            background-color: #FFFC00; /* Snapchat Yellow */
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #e6e300;
+        }
+        #preview {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 12px;
+            display: none;
+            border: 2px solid #FFFC00;
+        }
+    </style>
+    <!-- Snapchat Camera Kit Web SDK -->
+    <script src="https://unpkg.com/@snap/camera-kit-web@latest/dist/index.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Snapchat Camera Kit</h2>
+        
+        <!-- Camera render වන Canvas එක -->
+        <canvas id="canvas"></canvas>
+        
+        <!-- Photo එක ලබාගන්නා Button එක -->
+        <button id="capture-btn"> Take Photo</button>
+
+        <!-- ගත් Photo එක පෙන්වන Preview එක -->
+        <img id="preview" alt="Captured Photo Preview" />
+    </div>
+
+    <script>
+        // රූපයෙන් ලබාගත් ඔබගේ Tokens සහ Group ID:
+        const API_TOKEN = '1yIAyN48ItxyFW5ou1nK6JLL,IsMK5ds'; // Production API Token
+        const LENS_GROUP_ID = '1e71ce712-483e-be13-f60522759633'; // Demo Lens Group ID
+
+        async function initCameraKit() {
+            const canvas = document.getElementById('canvas');
+            
+            // 1. Camera Kit Bootstrap කිරීම
+            const cameraKit = await window.CameraKitWeb.bootstrapCameraKit({
+                apiToken: API_TOKEN,
+            });
+
+            // 2. Session එකක් ආරම්භ කිරීම
+            const session = await cameraKit.createSession({ liveRenderTarget: canvas });
+
+            // 3. කැමරාව (Webcam) සම්බන්ඳ කිරීම
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 1280, height: 720 }
+            });
+            await session.setSource(CameraKitWeb.createMediaStreamSource(mediaStream));
+            await session.play();
+
+            // 4. Lenses load කර පළමු Lens එක apply කිරීම
+            const lensRepository = cameraKit.lensRepository;
+            const { lenses } = await lensRepository.loadLensGroups([LENS_GROUP_ID]);
+
+            if (lenses.length > 0) {
+                await session.applyLens(lenses[0]); // පළමු lens එක යොදයි
+            } else {
+                console.warn('Lens කිසිවක් හමු වූයේ නැත.');
+            }
+
+            // 5. Photo එක ලබාගෙන Download කිරීම
+            document.getElementById('capture-btn').addEventListener('click', () => {
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                // Photo එක preview එකේ පෙන්වීම
+                const previewImg = document.getElementById('preview');
+                previewImg.src = dataUrl;
+                previewImg.style.display = 'block';
+
+                // Photo එක Auto-Download කිරීම
+                const link = document.createElement('a');
+                link.download = 'snap-photo.png';
+                link.href = dataUrl;
+                link.click();
+            });
+        }
+
+        initCameraKit().catch(console.error);
+    </script>
+</body>
+</html>
