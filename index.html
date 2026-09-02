@@ -60,20 +60,20 @@
     <div class="container">
         <h2>Snapchat Camera Kit</h2>
         
-        <!-- Camera render වන Canvas එක -->
+        <!-- Camera Render වන Canvas එක -->
         <canvas id="canvas"></canvas>
         
-        <!-- Photo එක ලබාගන්නා Button එක -->
-        <button id="capture-btn"> Take Photo</button>
+        <!-- Photo එකක් ගැනීමට බටන් එක -->
+        <button id="capture-btn">📷 Take Photo</button>
 
         <!-- ගත් Photo එක පෙන්වන Preview එක -->
         <img id="preview" alt="Captured Photo Preview" />
     </div>
 
     <script>
-        // රූපයෙන් ලබාගත් ඔබගේ Tokens සහ Group ID:
-        const API_TOKEN = '1yIAyN48ItxyFW5ou1nK6JLL,IsMK5ds'; // Production API Token
-        const LENS_GROUP_ID = '1e71ce712-483e-be13-f60522759633'; // Demo Lens Group ID
+        // ඔබ ලබා දුන් Credentials:
+        const API_TOKEN = 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzc2NDUwMzQ2LCJzdWIiOiI4NjdhOWFhOC1iYWQ4LTRlNWQtYjEwNi1hZjA0ODcwYWJhN2Z-U1RBR0lOR345NmYyMjAxNi1jZTc0LTRjNmUtOGYxYi1jMmE2NjI4OTYyZmIifQ.6jkrDcqfOOnwlu4tPEmPbMn4ycuJpcsOFTR7-ErFpC4';
+        const LENS_GROUP_ID = 'f311e71c-e713-483e-be13-f60522759633';
 
         async function initCameraKit() {
             const canvas = document.getElementById('canvas');
@@ -86,33 +86,31 @@
             // 2. Session එකක් ආරම්භ කිරීම
             const session = await cameraKit.createSession({ liveRenderTarget: canvas });
 
-            // 3. කැමරාව (Webcam) සම්බන්ඳ කිරීම
+            // 3. WebCam එක සම්බන්ධ කිරීම
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 1280, height: 720 }
             });
             await session.setSource(CameraKitWeb.createMediaStreamSource(mediaStream));
             await session.play();
 
-            // 4. Lenses load කර පළමු Lens එක apply කිරීම
+            // 4. Lens Load කිරීම
             const lensRepository = cameraKit.lensRepository;
             const { lenses } = await lensRepository.loadLensGroups([LENS_GROUP_ID]);
 
             if (lenses.length > 0) {
-                await session.applyLens(lenses[0]); // පළමු lens එක යොදයි
+                await session.applyLens(lenses[0]);
             } else {
                 console.warn('Lens කිසිවක් හමු වූයේ නැත.');
             }
 
-            // 5. Photo එක ලබාගෙන Download කිරීම
+            // 5. Photo එක ලබාගෙන Save කිරීම
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const dataUrl = canvas.toDataURL('image/png');
                 
-                // Photo එක preview එකේ පෙන්වීම
                 const previewImg = document.getElementById('preview');
                 previewImg.src = dataUrl;
                 previewImg.style.display = 'block';
 
-                // Photo එක Auto-Download කිරීම
                 const link = document.createElement('a');
                 link.download = 'snap-photo.png';
                 link.href = dataUrl;
